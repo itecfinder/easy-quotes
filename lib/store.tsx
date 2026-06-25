@@ -30,7 +30,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en")
   const [screen, setScreen] = useState<ScreenKey>("dashboard")
 
-  // ✅ ALWAYS initialized (never undefined)
+  // ALWAYS initialized (never undefined)
   const [projects] = useState<Project[]>([])
 
   const go = (s: ScreenKey) => setScreen(s)
