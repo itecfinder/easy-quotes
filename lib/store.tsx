@@ -3,8 +3,8 @@
 import { createContext, useContext, useMemo, useState, ReactNode } from "react"
 import type { ScreenKey } from "./types"
 import { dict } from "./i18n"
-type Lang = "en" | "es"
 
+type Lang = "en" | "es"
 type Project = any
 
 type AppContextType = {
@@ -17,6 +17,9 @@ type AppContextType = {
   openProject: (id: string) => void
   startProject: (id: string | null) => void
   money: (n: number) => string
+
+  current: Project | null
+  setCurrent: (p: Project | null) => void
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -25,21 +28,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en")
   const [screen, setScreen] = useState<ScreenKey>("dashboard")
 
-  // ALWAYS initialized (never undefined)
   const [projects] = useState<Project[]>([])
+  const [current, setCurrent] = useState<Project | null>(null)
 
   const go = (s: ScreenKey) => setScreen(s)
-  const t = (key: string) => dict[key as keyof typeof dict]?.[lang] ?? key
-  
+
+  const t = (key: string) =>
+    dict[key as keyof typeof dict]?.[lang] ?? key
 
   const openProject = (id: string) => {
     console.log("open", id)
   }
- const startProject = (_: string | null) => {
-  console.log("new project")
-  go("capture")
-}
-  
+
+  const startProject = (_: string | null) => {
+    console.log("new project")
+
+    const project = {
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      type: null,
+      lineItems: [],
+      estimate: {
+        laborRate: 0,
+        wastePct: 0,
+        profitPct: 0,
+        taxPct: 0,
+        discount: 0,
+      },
+    }
+
+    setCurrent(project)
+    go("estimate")
+  }
+
   const money = (n: number) =>
     new Intl.NumberFormat(lang === "es" ? "es-US" : "en-US", {
       style: "currency",
@@ -57,11 +78,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       openProject,
       startProject,
       money,
+      current,
+      setCurrent,
     }),
-    [lang, screen],
+    [lang, screen, current]
   )
 
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
+  return (
+    <AppContext.Provider value={value}>
+      {children}
+    </AppContext.Provider>
+  )
 }
 
 export function useApp() {
