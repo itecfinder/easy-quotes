@@ -1,5 +1,12 @@
 "use client"
-import { useEffect, useRef, type ChangeEvent } from "react"
+
+import {
+  useEffect,
+  useRef,
+  type ChangeEvent,
+  useMemo,
+} from "react"
+
 import { Upload } from "lucide-react"
 import { toast } from "sonner"
 
@@ -20,6 +27,9 @@ import {
 
 import { cn } from "@/lib/utils"
 
+// -----------------------------
+// CONSTANTS
+// -----------------------------
 const storeOrder: StoreKey[] = [
   "homeDepot",
   "lowes",
@@ -28,44 +38,97 @@ const storeOrder: StoreKey[] = [
   "lumber84",
 ]
 
+// -----------------------------
+// SAFE FALLBACK (SSR PROTECTION)
+// -----------------------------
+const emptyBusiness = {
+  name: "",
+  category: "",
+  phone: "",
+  email: "",
+  address: "",
+  city: "",
+  zip_code: "",
+  preferredStore: "homeDepot" as StoreKey,
+  currency: "USD" as const,
+  logoUrl: "",
+}
+
+// -----------------------------
+// COMPONENT
+// -----------------------------
 export function Settings() {
   const { t, lang, setLang, business, setBusiness } = useApp()
+
   const fileRef = useRef<HTMLInputElement>(null)
-
-  // -----------------------------
-  // SAFE STATE UPDATE HELPER
-  // -----------------------------
-  const updateBusiness = (patch: Partial<typeof business>) => {
-    setBusiness((prev) => ({ ...prev, ...patch }))
-  }
-
-  // -----------------------------
-  // LOGO HANDLER (with cleanup support)
-  // -----------------------------
   const prevUrl = useRef<string | null>(null)
 
-const onLogo = (e: ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0]
-  if (!file) return
+  //  SSR-safe business (prevents prerender crashes)
+  const safeBusiness = useMemo(() => {
+    return {
+      ...emptyBusiness,
+      ...(business ?? {}),
+    }
+  }, [business])
 
-  const url = URL.createObjectURL(file)
-
-  if (prevUrl.current) {
-    URL.revokeObjectURL(prevUrl.current)
+  // -----------------------------
+  // SAFE STATE UPDATE (ZUSTAND/CTX SAFE)
+  // -----------------------------
+  const updateBusiness = (patch: Partial<typeof safeBusiness>) => {
+    setBusiness((prev: any) => ({
+      ...(prev ?? emptyBusiness),
+      ...patch,
+    }))
   }
 
-  prevUrl.current = url
-  updateBusiness({ logoUrl: url })
-}
- 
+  // -----------------------------
+  // CLEANUP OBJECT URL
+  // -----------------------------
+  useEffect(() => {
+    return () => {
+      if (prevUrl.current) {
+        URL.revokeObjectURL(prevUrl.current)
+      }
+    }
+  }, [])
 
   // -----------------------------
-  // FIELD UPDATER
+  // LOGO HANDLER
+  // -----------------------------
+  const onLogo = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const url = URL.createObjectURL(file)
+
+    if (prevUrl.current) {
+      URL.revokeObjectURL(prevUrl.current)
+    }
+
+    prevUrl.current = url
+    updateBusiness({ logoUrl: url })
+
+    // allow same file re-upload
+    e.target.value = ""
+  }
+
+  // -----------------------------
+  // FIELD UPDATER (TYPE SAFE)
   // -----------------------------
   const setField =
-    (key: keyof typeof business) => (value: string) => {
-      updateBusiness({ [key]: value } as any)
+    <K extends keyof typeof safeBusiness>(key: K) =>
+    (value: (typeof safeBusiness)[K]) => {
+      updateBusiness({ [key]: value })
     }
+
+  // -----------------------------
+  // SELECT VALUE SAFETY
+  // -----------------------------
+  const preferredStoreValue = storeOrder.includes(
+    safeBusiness.preferredStore
+  )
+    ? safeBusiness.preferredStore
+    : "homeDepot"
 
   return (
     <div className="space-y-6 px-4 pt-5">
@@ -100,9 +163,9 @@ const onLogo = (e: ChangeEvent<HTMLInputElement>) => {
             onClick={() => fileRef.current?.click()}
             className="flex size-16 items-center justify-center overflow-hidden rounded-lg border border-dashed border-border bg-muted"
           >
-            {business.logoUrl ? (
+            {safeBusiness.logoUrl ? (
               <img
-                src={business.logoUrl}
+                src={safeBusiness.logoUrl}
                 alt="logo"
                 className="size-full object-contain"
               />
@@ -132,43 +195,43 @@ const onLogo = (e: ChangeEvent<HTMLInputElement>) => {
 
         <LabeledInput
           label={t("businessName")}
-          value={business.name}
+          value={safeBusiness.name}
           onChange={setField("name")}
         />
 
         <LabeledInput
           label={t("businessType")}
-          value={business.category ?? ""}
+          value={safeBusiness.category}
           onChange={setField("category")}
         />
 
         <LabeledInput
           label={t("phone")}
-          value={business.phone}
+          value={safeBusiness.phone}
           onChange={setField("phone")}
         />
 
         <LabeledInput
           label={t("email")}
-          value={business.email}
+          value={safeBusiness.email}
           onChange={setField("email")}
         />
 
         <LabeledInput
           label={t("businessAddress")}
-          value={business.address}
+          value={safeBusiness.address}
           onChange={setField("address")}
         />
 
         <LabeledInput
           label={t("city")}
-          value={business.city ?? ""}
+          value={safeBusiness.city}
           onChange={setField("city")}
         />
 
         <LabeledInput
           label={t("zipCode")}
-          value={business.zip_code ?? ""}
+          value={safeBusiness.zip_code}
           onChange={setField("zip_code")}
         />
       </Section>
@@ -179,7 +242,7 @@ const onLogo = (e: ChangeEvent<HTMLInputElement>) => {
           <Label className="text-sm">{t("preferredStore")}</Label>
 
           <Select
-            value={business.preferredStore ?? ""}
+            value={preferredStoreValue}
             onValueChange={(v) =>
               updateBusiness({ preferredStore: v as StoreKey })
             }
@@ -202,9 +265,11 @@ const onLogo = (e: ChangeEvent<HTMLInputElement>) => {
           <Label className="text-sm">{t("currency")}</Label>
 
           <Select
-            value={business.currency}
+            value={safeBusiness.currency}
             onValueChange={(v) =>
-              updateBusiness({ currency: v as typeof business.currency })
+              updateBusiness({
+                currency: v as typeof safeBusiness.currency,
+              })
             }
           >
             <SelectTrigger>
@@ -263,7 +328,7 @@ function LabeledInput({
     <div className="space-y-1.5">
       <Label className="text-sm">{label}</Label>
       <Input
-        value={value}
+        value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         className="h-10"
       />
