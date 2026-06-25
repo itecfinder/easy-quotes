@@ -29,8 +29,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [projects] = useState<Project[]>([])
 
   const go = (s: ScreenKey) => setScreen(s)
-
-  const t = (key: string) => dict[lang]?.[key] ?? key
+  const t = (key: string) => dict[key as keyof typeof dict]?.[lang] ?? key
+  
 
   const openProject = (id: string) => {
     console.log("open", id)
