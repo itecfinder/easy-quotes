@@ -1,49 +1,44 @@
 import { NextResponse } from "next/server"
-import crypto from "crypto"
-
-const SECRET = process.env.SESSION_SECRET || "dev-secret"
-
-function sign(value: string) {
-  return crypto.createHmac("sha256", SECRET).update(value).digest("hex")
-}
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json()
+    const body = await req.json().catch(() => null)
+
+    const email = body?.email?.trim()
 
     if (!email || !email.includes("@")) {
       return NextResponse.json(
-        { error: "Please enter a valid email" },
+        { message: "Invalid email" },
         { status: 400 }
       )
     }
 
-    const payload = JSON.stringify({ email, loggedIn: true })
-    const signature = sign(payload)
+    // OPTIONAL: normalize email
+    const normalizedEmail = email.toLowerCase()
 
-    const token = Buffer.from(payload).toString("base64") + "." + signature
+    //  Example: pretend "login"
+    // In real apps: check DB / send OTP / create session
 
-    const response = NextResponse.json({
-      success: true,
-      user: { email },
-    })
+    const response = NextResponse.json(
+      { message: "Login successful" },
+      { status: 200 }
+    )
 
-    response.cookies.set({
-      name: "session",
-      value: token,
+    //  Example session cookie (replace with real auth later)
+    response.cookies.set("session", normalizedEmail, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
     })
 
     return response
   } catch (error) {
-    console.error("Login error:", error)
+    console.error("LOGIN_ROUTE_ERROR:", error)
 
     return NextResponse.json(
-      { error: "Something went wrong" },
+      { message: "Server error" },
       { status: 500 }
     )
   }
