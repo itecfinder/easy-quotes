@@ -2,10 +2,20 @@
 
 import { createContext, useContext, useState, ReactNode } from "react"
 
-const AppContext = createContext<any>(null)
+type AppState = {
+  lang: string
+  screen: string
+}
+
+type AppContextType = {
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+}
+
+const AppContext = createContext<AppContextType | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState({
+  const [state, setState] = useState<AppState>({
     lang: "en",
     screen: "dashboard",
   })
