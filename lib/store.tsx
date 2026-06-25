@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useMemo, useState, ReactNode } from "react"
+import { loadProjects, saveProjects } from "@/lib/services/storage"
 import type { ScreenKey } from "./types"
 import { dict } from "./i18n"
 
