@@ -1,19 +1,11 @@
-export function useApp() {
-  return {
-    lang: "en",
-    setLang: () => {},
-    t: (k: any) => k,
-    screen: "dashboard",
-    go: () => {},
-    business: {},
-    setBusiness: () => {},
-    projects: [],
-    current: null,
-    startProject: () => {},
-    openProject: () => {},
-    updateCurrent: () => {},
-    saveCurrent: () => {},
-    totals: {},
-    money: (n: number) => "$" + n,
-  } as any
+import { createContext, useContext, ReactNode } from "react"
+
+const AppContext = createContext<any>(null)
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  return (
+    <AppContext.Provider value={useApp()}>
+      {children}
+    </AppContext.Provider>
+  )
 }
