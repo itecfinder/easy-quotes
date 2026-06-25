@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo, useState, ReactNode } from "react"
 import type { ScreenKey } from "./types"
-
+import { dict } from "./i18n"
 type Lang = "en" | "es"
 
 type Project = any
@@ -20,11 +20,6 @@ type AppContextType = {
 }
 
 const AppContext = createContext<AppContextType | null>(null)
-
-const dict: Record<Lang, Record<string, string>> = {
-  en: { appName: "Easy Quotes" },
-  es: { appName: "Cotizaciones" },
-}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en")
