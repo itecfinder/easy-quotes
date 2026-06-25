@@ -10,16 +10,33 @@ type Project = any
 type AppContextType = {
   lang: Lang
   setLang: (l: Lang) => void
+
   screen: ScreenKey
   go: (s: ScreenKey) => void
+
   t: (key: string) => string
+
   projects: Project[]
+
   openProject: (id: string) => void
   startProject: (id: string | null) => void
+
   money: (n: number) => string
 
   current: Project | null
   setCurrent: (p: Project | null) => void
+
+  updateCurrent: (patch: any) => void
+  saveCurrent: () => void
+
+  totals: {
+    materials: number
+    labor: number
+    subtotal: number
+    withProfit: number
+    tax: number
+    total: number
+  }
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -40,6 +57,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     console.log("open", id)
   }
 
+  // STEP 3: create project + set current + go estimate
   const startProject = (_: string | null) => {
     console.log("new project")
 
@@ -61,6 +79,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     go("estimate")
   }
 
+  const updateCurrent = (patch: any) => {
+    setCurrent((prev: any) => {
+      if (!prev) return prev
+      return { ...prev, ...patch }
+    })
+  }
+
+  const saveCurrent = () => {
+    console.log("saving project", current)
+  }
+
+  const totals = {
+    materials: 0,
+    labor: 0,
+    subtotal: 0,
+    withProfit: 0,
+    tax: 0,
+    total: 0,
+  }
+
   const money = (n: number) =>
     new Intl.NumberFormat(lang === "es" ? "es-US" : "en-US", {
       style: "currency",
@@ -78,8 +116,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       openProject,
       startProject,
       money,
+
       current,
       setCurrent,
+      updateCurrent,
+      saveCurrent,
+      totals,
     }),
     [lang, screen, current]
   )
