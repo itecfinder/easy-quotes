@@ -1,6 +1,14 @@
 "use client"
 
-import { createContext, useContext, useMemo, useState, ReactNode } from "react"
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  ReactNode,
+  useEffect,
+} from "react"
+
 import { loadProjects, saveProjects } from "@/lib/services/storage"
 import type { ScreenKey } from "./types"
 import { dict } from "./i18n"
@@ -30,14 +38,7 @@ type AppContextType = {
   updateCurrent: (patch: any) => void
   saveCurrent: () => void
 
-  totals: {
-    materials: number
-    labor: number
-    subtotal: number
-    withProfit: number
-    tax: number
-    total: number
-  }
+  totals: any
 }
 
 const AppContext = createContext<AppContextType | null>(null)
@@ -46,7 +47,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("en")
   const [screen, setScreen] = useState<ScreenKey>("dashboard")
 
-  const [projects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<Project[]>([])
   const [current, setCurrent] = useState<Project | null>(null)
 
   const go = (s: ScreenKey) => setScreen(s)
@@ -54,36 +55,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const t = (key: string) =>
     dict[key as keyof typeof dict]?.[lang] ?? key
 
-  const openProject = (id: string) => {
-    console.log("open", id)
+  // LOAD ON START
+  useEffect(() => {
+    const data = loadProjects()
+    setProjects(data)
+  }, [])
+
+  //  SAVE HELPER
+  const persist = (next: Project[]) => {
+    setProjects(next)
+    saveProjects(next)
   }
 
-  // STEP 3: create project + set current + go estimate
+  //  CREATE PROJECT
   const startProject = (_: string | null) => {
-    console.log("new project")
-
     const project = {
       id: crypto.randomUUID(),
       createdAt: Date.now(),
       type: null,
+      customer: {
+        name: "",
+        phone: "",
+        email: "",
+        address: "",
+        zip: "",
+      },
       lineItems: [],
       estimate: {
-        laborRate: 0,
-        wastePct: 0,
-        profitPct: 0,
-        taxPct: 0,
+        laborRate: 60,
+        wastePct: 10,
+        profitPct: 20,
+        taxPct: 7,
         discount: 0,
       },
     }
+
+    const next = [project, ...projects]
+    persist(next)
 
     setCurrent(project)
     go("estimate")
   }
 
+  //  OPEN PROJECT
+  const openProject = (id: string) => {
+    const project = projects.find((p) => p.id === id)
+    if (!project) return
+
+    setCurrent(project)
+    go("estimate")
+  }
+
+  // ✏️ UPDATE CURRENT
   const updateCurrent = (patch: any) => {
     setCurrent((prev: any) => {
       if (!prev) return prev
-      return { ...prev, ...patch }
+
+      const updated = { ...prev, ...patch }
+
+      const next = projects.map((p) =>
+        p.id === updated.id ? updated : p
+      )
+
+      persist(next)
+
+      return updated
     })
   }
 
@@ -113,18 +149,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       screen,
       go,
       t,
+
       projects,
       openProject,
       startProject,
+
       money,
 
       current,
       setCurrent,
       updateCurrent,
       saveCurrent,
+
       totals,
     }),
-    [lang, screen, current]
+    [lang, screen, current, projects]
   )
 
   return (
