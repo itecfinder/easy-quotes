@@ -37,9 +37,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const startProject = (_: string | null) => {
-    console.log("new project")
-  }
-
+  console.log("new project")
+  go("project")
+}
+  
   const money = (n: number) =>
     new Intl.NumberFormat(lang === "es" ? "es-US" : "en-US", {
       style: "currency",
