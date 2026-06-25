@@ -1,3 +1,5 @@
-export default function DashboardPage() {
-  return <div>Dashboard</div>
+import Dashboard from "@/components/screens/dashboard";
+
+export default function Page() {
+  return <Dashboard />;
 }
