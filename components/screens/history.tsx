@@ -35,7 +35,10 @@ export function History() {
       ) : (
         <ul className="mt-4 space-y-2">
           {projects.map((p) => {
-            const total = computeTotals(p.lineItems, p.estimate).total
+            const safeItems = p.lineItems ?? []
+            const safeEstimate = p.estimate ?? {}
+
+            const total = computeTotals(safeItems, safeEstimate).total
 
             return (
               <li key={p.id}>
@@ -43,26 +46,35 @@ export function History() {
                   onClick={() => openProject(p.id)}
                   className="flex w-full items-center justify-between rounded-xl border border-border bg-card px-4 py-3 text-left"
                 >
+                  {/* LEFT SIDE */}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-semibold text-foreground">
                         {p.customer?.name || t("newProject")}
                       </p>
-                      <StatusBadge status={p.status} />
+
+                      {/* SAFE STATUS */}
+                      {p.status && <StatusBadge status={p.status} />}
                     </div>
 
                     <p className="truncate text-xs text-muted-foreground">
-                      {p.type ? projectTypeLabels[p.type][lang] : "—"}
+                      {p.type
+                        ? projectTypeLabels[p.type]?.[lang] ?? "—"
+                        : "—"}
+
                       {p.invoiceNumber ? ` · ${p.invoiceNumber}` : ""}
                     </p>
 
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {new Date(p.createdAt).toLocaleDateString(
-                        lang === "es" ? "es-US" : "en-US"
-                      )}
+                      {p.createdAt
+                        ? new Date(p.createdAt).toLocaleDateString(
+                            lang === "es" ? "es-US" : "en-US"
+                          )
+                        : "—"}
                     </p>
                   </div>
 
+                  {/* RIGHT SIDE */}
                   <div className="ml-3 flex shrink-0 items-center gap-1">
                     <span className="font-semibold text-foreground">
                       {money(total)}
