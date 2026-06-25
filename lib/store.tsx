@@ -35,10 +35,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const openProject = (id: string) => {
     console.log("open", id)
   }
-
-  const startProject = (_: string | null) => {
+ const startProject = (_: string | null) => {
   console.log("new project")
-  go("project")
+  go("capture")
 }
   
   const money = (n: number) =>
