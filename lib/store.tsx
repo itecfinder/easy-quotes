@@ -36,7 +36,7 @@ type AppContextType = {
   setCurrent: (p: Project | null) => void
 
   updateCurrent: (patch: any) => void
-  saveCurrent: () => void
+  saveCurrent: () => Promise<void>
 
   totals: any
 }
@@ -123,9 +123,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const saveCurrent = () => {
-    console.log("saving project", current)
+  const saveCurrent = async () => {
+  if (!current) return
+
+  try {
+    // keep local history working
+    const updatedProjects = projects.some((p) => p.id === current.id)
+      ? projects.map((p) => (p.id === current.id ? current : p))
+      : [current, ...projects]
+
+    setProjects(updatedProjects)
+
+    localStorage.setItem(
+      "contractor-projects",
+      JSON.stringify(updatedProjects)
+    )
+
+    // save to Supabase
+    const email =
+      localStorage.getItem("pending_email") ||
+      current.customer?.email ||
+      "lead@unknown.com"
+
+    await saveProject(current, email)
+
+    console.log("Project saved successfully")
+  } catch (error) {
+    console.error("Save failed:", error)
   }
+}
 
   const totals = {
     materials: 0,
