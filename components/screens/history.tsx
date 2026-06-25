@@ -17,9 +17,10 @@ export function History() {
           {t("history")}
         </h1>
 <Button size="sm" onClick={() => { startProject(null)
-    go("estimate")
+    go("customer")
   }}
-  className="h-9"> <Plus className="size-4" />
+  className="h-9">
+  <Plus className="size-4" />
   {t("newProject")}
 </Button>
       </div>
