@@ -23,7 +23,7 @@ import type { ProjectTypeKey } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-// ✅ SAFE fallback (prevents build crash if file is broken)
+//  SAFE fallback (prevents build crash if file is broken)
 const StatusBadge = ({ status }: { status: string }) => {
   return (
     <span className="text-xs px-2 py-1 rounded bg-muted">
