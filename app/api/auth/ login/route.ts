@@ -1,4 +1,11 @@
 import { NextResponse } from "next/server"
+import crypto from "crypto"
+
+const SECRET = process.env.SESSION_SECRET || "dev-secret"
+
+function sign(value: string) {
+  return crypto.createHmac("sha256", SECRET).update(value).digest("hex")
+}
 
 export async function POST(req: Request) {
   try {
@@ -11,8 +18,10 @@ export async function POST(req: Request) {
       )
     }
 
-    // TEMP AUTH
-    // Later this will call the BD API
+    const payload = JSON.stringify({ email, loggedIn: true })
+    const signature = sign(payload)
+
+    const token = Buffer.from(payload).toString("base64") + "." + signature
 
     const response = NextResponse.json({
       success: true,
@@ -21,15 +30,12 @@ export async function POST(req: Request) {
 
     response.cookies.set({
       name: "session",
-      value: JSON.stringify({
-        email,
-        loggedIn: true,
-      }),
+      value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
     })
 
     return response
@@ -42,3 +48,4 @@ export async function POST(req: Request) {
     )
   }
 }
+
