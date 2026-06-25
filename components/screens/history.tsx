@@ -1,5 +1,4 @@
 "use client"
-"use client"
 
 import { ChevronRight, FolderClock, Plus } from "lucide-react"
 import { projectTypeLabels } from "@/lib/i18n"
@@ -17,6 +16,7 @@ export function History() {
         <h1 className="text-2xl font-bold tracking-tight font-[family-name:var(--font-heading)]">
           {t("history")}
         </h1>
+
         <Button size="sm" onClick={() => startProject(null)} className="h-9">
           <Plus className="size-4" />
           {t("newProject")}
@@ -28,12 +28,15 @@ export function History() {
           <span className="flex size-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
             <FolderClock className="size-7" />
           </span>
-          <p className="max-w-[16rem] text-sm text-muted-foreground text-pretty">{t("noHistory")}</p>
+          <p className="max-w-[16rem] text-sm text-muted-foreground">
+            {t("noHistory")}
+          </p>
         </div>
       ) : (
         <ul className="mt-4 space-y-2">
           {projects.map((p) => {
             const total = computeTotals(p.lineItems, p.estimate).total
+
             return (
               <li key={p.id}>
                 <button
@@ -43,20 +46,27 @@ export function History() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="truncate font-semibold text-foreground">
-                        {p.customer.name || t("newProject")}
+                        {p.customer?.name || t("newProject")}
                       </p>
                       <StatusBadge status={p.status} />
                     </div>
+
                     <p className="truncate text-xs text-muted-foreground">
                       {p.type ? projectTypeLabels[p.type][lang] : "—"}
                       {p.invoiceNumber ? ` · ${p.invoiceNumber}` : ""}
                     </p>
+
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {new Date(p.createdAt).toLocaleDateString(lang === "es" ? "es-US" : "en-US")}
+                      {new Date(p.createdAt).toLocaleDateString(
+                        lang === "es" ? "es-US" : "en-US"
+                      )}
                     </p>
                   </div>
+
                   <div className="ml-3 flex shrink-0 items-center gap-1">
-                    <span className="font-semibold text-foreground">{money(total)}</span>
+                    <span className="font-semibold text-foreground">
+                      {money(total)}
+                    </span>
                     <ChevronRight className="size-4 text-muted-foreground" />
                   </div>
                 </button>
