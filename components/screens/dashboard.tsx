@@ -21,7 +21,7 @@ import type { ProjectTypeKey } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
 
-// Temporary fallback
+// Temporary fallback until real component is restored
 const StatusBadge = ({ status }: { status: string }) => (
   <span className="rounded bg-muted px-2 py-1 text-xs">
     {status}
@@ -60,7 +60,13 @@ export function Dashboard() {
     projects = [],
     openProject,
     money,
+    go,
   } = useApp()
+
+  const createProject = (projectType?: ProjectTypeKey) => {
+    startProject(projectType ?? null)
+    go("capture")
+  }
 
   return (
     <div className="space-y-6 px-4 pt-5">
@@ -75,7 +81,7 @@ export function Dashboard() {
         </h1>
 
         <Button
-          onClick={() => startProject(null)}
+          onClick={() => createProject()}
           className="mt-4 w-full"
         >
           <Plus className="size-5" />
@@ -96,7 +102,7 @@ export function Dashboard() {
             return (
               <button
                 key={key}
-                onClick={() => startProject(key)}
+                onClick={() => createProject(key)}
                 className="flex aspect-square flex-col items-center justify-center gap-2 rounded-xl border bg-card transition hover:bg-accent"
               >
                 <span className="flex size-9 items-center justify-center rounded-lg bg-accent">
