@@ -76,15 +76,14 @@ export async function POST(req: NextRequest) {
       data?.data ||
       data?.result ||
       data
+console.log(
+  "BD USER:",
+  JSON.stringify(user, null, 2)
+)
 
-    console.log(
-      "BD USER:",
-      JSON.stringify(user, null, 2)
-    )
-
-    const isEmptyUser =
-      !user ||
-      (Array.isArray(user) && user.length === 0)
+const isEmptyUser =
+  !user ||
+  (Array.isArray(user) && user.length === 0)
 
 if (isEmptyUser) {
   // Check if lead already exists in Supabase
@@ -118,7 +117,7 @@ if (isEmptyUser) {
     firstTime: false,
   })
 }
-    const planId = String(
+      const planId = String(
       user.subscription_id ||
       user.membership_plan_id ||
       user.plan_id ||
