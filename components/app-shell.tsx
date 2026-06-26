@@ -79,13 +79,14 @@ export function AppShell() {
       {l}
     </button>
   ))}
-
-  <button
-    onClick={() => go("dashboard")}
-    className="rounded bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground hover:opacity-90"
-  >
-    Exit
-  </button>
+<button
+  onClick={() => {
+    window.location.href = "https://www.itecfinder.com/login"
+  }}
+  className="rounded bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground hover:opacity-90"
+>
+  Exit
+</button>
 </div>
         </header>
 
