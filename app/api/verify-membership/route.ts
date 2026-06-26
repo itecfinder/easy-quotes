@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-
+import {
+  getLead,
+  createLead,
+} from "@/lib/services/leads"
 const FREE_PLAN_IDS = ["8"]
 const PAID_PLAN_IDS = ["4", "112"]
 
@@ -83,13 +86,42 @@ export async function POST(req: NextRequest) {
       !user ||
       (Array.isArray(user) && user.length === 0)
 
-    if (isEmptyUser) {
-      return NextResponse.json({
-        allowed: true,
-        access: "lead",
-      })
-    }
+    const isEmptyUser =
+  !user ||
+  (Array.isArray(user) && user.length === 0)
 
+if (isEmptyUser) {
+  // Check if lead already exists in Supabase
+  let lead = await getLead(email)
+
+  // First visit → create lead record
+  if (!lead) {
+    lead = await createLead(email)
+
+    return NextResponse.json({
+      allowed: true,
+      access: "lead",
+      firstTime: true,
+    })
+  }
+
+  // Lead already used free estimate
+  if (lead.free_estimate_used) {
+    return NextResponse.json({
+      allowed: false,
+      access: "blocked",
+      message:
+        "Your free estimate has already been used. Please create a business account.",
+    })
+  }
+
+  // Returning lead still has free estimate available
+  return NextResponse.json({
+    allowed: true,
+    access: "lead",
+    firstTime: false,
+  })
+}
     const planId = String(
       user.subscription_id ||
       user.membership_plan_id ||
