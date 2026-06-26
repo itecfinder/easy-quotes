@@ -1,4 +1,4 @@
- import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 const FREE_PLAN_IDS = ["8"]
 const PAID_PLAN_IDS = ["4", "112"]
@@ -18,18 +18,24 @@ export async function POST(req: NextRequest) {
     }
 
     console.log("VERIFY MEMBER:", email)
+    console.log("BD API URL:", process.env.BD_API_URL)
+    console.log(
+      "BD API KEY EXISTS:",
+      !!process.env.BD_API_KEY
+    )
 
     const url =
       `${process.env.BD_API_URL}/api/v2/user/get` +
       `?property=email` +
       `&property_value=${encodeURIComponent(email)}`
 
-    console.log("BD URL:", url)
+    console.log("BD REQUEST URL:", url)
 
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "X-Api-Key": process.env.BD_API_KEY!,
+        "X-BD-Site-URL": process.env.BD_API_URL!,
       },
       cache: "no-store",
     })
@@ -49,8 +55,9 @@ export async function POST(req: NextRequest) {
 
     try {
       data = raw ? JSON.parse(raw) : null
-    } catch (e) {
-      console.error("JSON PARSE ERROR:", e)
+    } catch (error) {
+      console.error("JSON PARSE ERROR:", error)
+
       throw new Error("Invalid BD response")
     }
 
@@ -71,23 +78,25 @@ export async function POST(req: NextRequest) {
       "BD USER:",
       JSON.stringify(user, null, 2)
     )
-// No user found in BD
-const isEmptyUser =
-  !user ||
-  (Array.isArray(user) && user.length === 0)
 
-if (isEmptyUser) {
-  return NextResponse.json({
-    allowed: true,
-    access: "lead",
-  })
-} 
-const planId = String(
-  user.subscription_id ||
-  user.membership_plan_id ||
-  user.plan_id ||
-  ""
-)
+    const isEmptyUser =
+      !user ||
+      (Array.isArray(user) && user.length === 0)
+
+    if (isEmptyUser) {
+      return NextResponse.json({
+        allowed: true,
+        access: "lead",
+      })
+    }
+
+    const planId = String(
+      user.subscription_id ||
+      user.membership_plan_id ||
+      user.plan_id ||
+      ""
+    )
+
     console.log("PLAN ID:", planId)
 
     if (PAID_PLAN_IDS.includes(planId)) {
