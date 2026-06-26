@@ -38,13 +38,13 @@ async function handleContinue() {
       }),
     })
 
-    const data = await res.json()
+   const data = await res.json().catch(() => null)
 
-    if (!res.ok) {
-      throw new Error(
-        data?.message || "Unable to verify account"
-      )
-    }
+if (!res.ok) {
+  throw new Error(
+    data?.message || "Unable to verify account"
+  )
+}
 
     console.log("ACCESS:", data)
 
