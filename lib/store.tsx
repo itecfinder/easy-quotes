@@ -16,7 +16,6 @@ import { dict } from "./i18n"
 
 type Lang = "en" | "es"
 type Project = any
-
 type AppContextType = {
   lang: Lang
   setLang: (l: Lang) => void
@@ -39,9 +38,17 @@ type AppContextType = {
   updateCurrent: (patch: any) => void
   saveCurrent: () => Promise<void>
 
+  business: {
+    name: string
+    logoUrl: string
+  }
+
+  setBusiness: (
+    b: { name: string; logoUrl: string }
+  ) => void
+
   totals: any
 }
-
 const AppContext = createContext<AppContextType | null>(null)
 
 export function AppProvider({
@@ -55,7 +62,7 @@ export function AppProvider({
 
   const [projects, setProjects] = useState<Project[]>([])
   const [current, setCurrent] = useState<Project | null>(null)
-
+  const [business, setBusiness] = useState({ name: "",  logoUrl: "",})
   const go = (s: ScreenKey) => setScreen(s)
 
   const t = (key: string) =>
@@ -253,33 +260,35 @@ export function AppProvider({
       }
     ).format(n)
 
-  const value = useMemo(
-    () => ({
-      lang,
-      setLang,
+const value = useMemo(
+  () => ({
+    lang,
+    setLang,
 
-      screen,
-      go,
+    screen,
+    go,
 
-      t,
+    t,
 
-      projects,
-      openProject,
-      startProject,
+    projects,
+    openProject,
+    startProject,
 
-      money,
+    money,
 
-      current,
-      setCurrent,
+    current,
+    setCurrent,
 
-      updateCurrent,
-      saveCurrent,
+    updateCurrent,
+    saveCurrent,
 
-      totals,
-    }),
-    [lang, screen, current, projects]
-  )
+    business,
+    setBusiness,
 
+    totals,
+  }),
+  [lang, screen, current, projects, business]
+)
   return (
     <AppContext.Provider value={value}>
       {children}
