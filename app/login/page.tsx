@@ -74,16 +74,15 @@ if (!res.ok) {
   const valid = isValidEmail(email.trim())
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-6">
-      <div className="w-full max-w-sm space-y-6">
+    <div className="text-center space-y-2">
+  <h1 className="text-2xl font-semibold">
+    itecfinder Easy Quote
+  </h1>
 
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold">Welcome</h1>
-          <p className="text-sm text-muted-foreground">
-            Enter your email to continue
-          </p>
-        </div>
-
+  <p className="text-sm text-muted-foreground">
+    Enter your business email to continue
+  </p>
+</div>
         <input
           type="email"
           value={email}
