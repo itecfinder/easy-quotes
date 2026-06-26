@@ -86,10 +86,6 @@ export async function POST(req: NextRequest) {
       !user ||
       (Array.isArray(user) && user.length === 0)
 
-    const isEmptyUser =
-  !user ||
-  (Array.isArray(user) && user.length === 0)
-
 if (isEmptyUser) {
   // Check if lead already exists in Supabase
   let lead = await getLead(email)
