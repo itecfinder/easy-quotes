@@ -1,48 +1,82 @@
+import { NextRequest, NextResponse } from "next/server"
+
+const BD_CREATE_URL =
+  `${process.env.BD_API_URL}/api/v2/user/create`
+
 export async function POST(req: NextRequest) {
   try {
     const business = await req.json()
 
-    const email = String(business?.email || "").trim().toLowerCase()
-    const password = Math.floor(100000 + Math.random() * 900000).toString()
+    const email = String(
+      business?.email || ""
+    )
+      .trim()
+      .toLowerCase()
+
+    const password = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString()
 
     if (!email) {
       return NextResponse.json(
-        { success: false, message: "Email required" },
+        {
+          success: false,
+          message: "Email required",
+        },
         { status: 400 }
       )
     }
+
+    console.log("CREATE MEMBER:", email)
 
     const response = await fetch(BD_CREATE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Api-Key": process.env.BD_API_KEY!,
+        "X-BD-Site-URL": process.env.BD_API_URL!,
       },
       body: JSON.stringify({
         email,
         password,
+
+        // Free Membership Plan
         subscription_id: "8",
+
         first_name: business.first_name || "",
         last_name: business.last_name || "",
         phone: business.phone || "",
+
         address1: business.address || "",
         city: business.city || "",
         state_code: business.state_code || "",
         zip_code: business.zip_code || "",
-        country_code: business.country_code || "US",
+
+        country_code:
+          business.country_code || "US",
+
         active: "1",
+
         flow_source: "itecfinder_estimator",
       }),
+      cache: "no-store",
     })
 
     const raw = await response.text()
 
-    let data: any
+    console.log("BD STATUS:", response.status)
+    console.log("BD RAW RESPONSE:", raw)
+
+    let data: any = null
+
     try {
-      data = JSON.parse(raw)
+      data = raw ? JSON.parse(raw) : null
     } catch {
       return NextResponse.json(
-        { success: false, message: "Invalid BD response" },
+        {
+          success: false,
+          message: "Invalid BD response",
+        },
         { status: 502 }
       )
     }
@@ -83,7 +117,10 @@ export async function POST(req: NextRequest) {
       user: data,
     })
   } catch (error) {
-    console.error("BD CREATE ERROR:", error)
+    console.error(
+      "BD CREATE ERROR:",
+      error
+    )
 
     return NextResponse.json(
       {
