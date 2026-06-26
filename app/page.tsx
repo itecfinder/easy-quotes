@@ -1,12 +1,5 @@
-import { AppShell } from "@/components/app-shell"
-import { Toaster } from "@/components/ui/sonner"
+import { redirect } from "next/navigation"
 
 export default function Page() {
-  return (
-    <>
-      <AppShell />
-      <Toaster position="top-center" />
-    </>
-  )
+  redirect("/login")
 }
-
