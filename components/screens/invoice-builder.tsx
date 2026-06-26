@@ -21,8 +21,8 @@ export function InvoiceBuilder() {
   const { t, lang, current, updateCurrent, saveCurrent, totals, money, business, setBusiness, go } =
     useApp()
   const fileRef = useRef<HTMLInputElement>(null)
-  if (!current) return null
-
+ 
+  if (!current || !business) return null
   const invoiceNo =
     current.invoiceNumber ?? `INV-${new Date().getFullYear()}-${current.id.slice(0, 4).toUpperCase()}`
 
