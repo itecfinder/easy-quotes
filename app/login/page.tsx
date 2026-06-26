@@ -72,37 +72,43 @@ if (!res.ok) {
 }
 
   const valid = isValidEmail(email.trim())
+return (
+  <div className="flex min-h-screen items-center justify-center bg-background px-6">
+    <div className="w-full max-w-sm space-y-6">
 
-  return (
-    <div className="text-center space-y-2">
-  <h1 className="text-2xl font-semibold">
-    itecfinder Easy Quote
-  </h1>
+      <div className="text-center space-y-2">
+        <h1 className="text-2xl font-semibold">
+          itecfinder Easy Quote
+        </h1>
 
-  <p className="text-sm text-muted-foreground">
-    Enter your business email to continue
-  </p>
-</div>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@email.com"
-          className="w-full rounded-md border px-3 py-2 text-sm"
-        />
-
-        {error && (
-          <p className="text-sm text-red-500">{error}</p>
-        )}
-
-        <Button
-          onClick={handleContinue}
-          disabled={!valid || loading}
-          className="w-full"
-        >
-          {loading ? "Continuing..." : "Continue"}
-        </Button>
+        <p className="text-sm text-muted-foreground">
+          Enter your business email to continue
+        </p>
       </div>
+
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="you@email.com"
+        className="w-full rounded-md border px-3 py-2 text-sm"
+      />
+
+      {error && (
+        <p className="text-sm text-red-500">
+          {error}
+        </p>
+      )}
+
+      <Button
+        onClick={handleContinue}
+        disabled={!valid || loading}
+        className="w-full"
+      >
+        {loading ? "Continuing..." : "Continue"}
+      </Button>
+
     </div>
-  )
-}
+  </div>
+)
+  
