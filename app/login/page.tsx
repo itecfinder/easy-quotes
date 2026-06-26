@@ -12,8 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  async function handleContinue() {
+async function handleContinue() {
   const cleanEmail = email.trim()
 
   if (!isValidEmail(cleanEmail)) {
@@ -27,7 +26,6 @@ export default function LoginPage() {
   setError(null)
 
   try {
-    // save email locally for project saving
     localStorage.setItem("pending_email", cleanEmail)
 
     const res = await fetch("/api/verify-membership", {
@@ -50,35 +48,13 @@ export default function LoginPage() {
 
     console.log("ACCESS:", data)
 
-    // Paid members → unlimited access
-    if (data.access === "paid") {
-  document.cookie = `token=${cleanEmail}; path=/; max-age=2592000`
-  document.cookie = `access=paid; path=/; max-age=2592000`
-
-  router.push("/dashboard")
-  return
-}
-
-if (data.access === "free") {
-  document.cookie = `token=${cleanEmail}; path=/; max-age=2592000`
-  document.cookie = `access=free; path=/; max-age=2592000`
-
-  router.push("/dashboard")
-  return
-}
-
-if (data.access === "lead") {
-  document.cookie = `token=${cleanEmail}; path=/; max-age=2592000`
-  document.cookie = `access=lead; path=/; max-age=2592000`
-
-  router.push("/dashboard")
-  return
-}
-  
-    // First-time visitor / lead
-    if (data.access === "lead") {
-      document.cookie = `token=${cleanEmail}; path=/`
-      document.cookie = `access=lead; path=/`
+    if (
+      data.access === "paid" ||
+      data.access === "free" ||
+      data.access === "lead"
+    ) {
+      document.cookie = `token=${cleanEmail}; path=/; max-age=2592000`
+      document.cookie = `access=${data.access}; path=/; max-age=2592000`
 
       router.push("/dashboard")
       return
@@ -94,6 +70,7 @@ if (data.access === "lead") {
     setLoading(false)
   }
 }
+
   const valid = isValidEmail(email.trim())
 
   return (
