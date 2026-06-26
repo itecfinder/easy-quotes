@@ -8,6 +8,7 @@ import {
   ReactNode,
   useEffect,
 } from "react"
+
 import { saveProject } from "@/lib/services/save-project"
 import { loadProjects, saveProjects } from "@/lib/services/storage"
 import type { ScreenKey } from "./types"
@@ -43,9 +44,14 @@ type AppContextType = {
 
 const AppContext = createContext<AppContextType | null>(null)
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({
+  children,
+}: {
+  children: ReactNode
+}) {
   const [lang, setLang] = useState<Lang>("en")
-  const [screen, setScreen] = useState<ScreenKey>("dashboard")
+  const [screen, setScreen] =
+    useState<ScreenKey>("dashboard")
 
   const [projects, setProjects] = useState<Project[]>([])
   const [current, setCurrent] = useState<Project | null>(null)
@@ -55,24 +61,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const t = (key: string) =>
     dict[key as keyof typeof dict]?.[lang] ?? key
 
-  // LOAD ON START
+  // LOAD PROJECTS
   useEffect(() => {
-    const data = loadProjects()
-    setProjects(data)
+    try {
+      const data = loadProjects()
+
+      // protect older/corrupted projects
+      const safe = (data || []).map((p: any) => ({
+        notes: "",
+        images: [],
+        analysis: null,
+        lineItems: [],
+        status: "draft",
+
+        ...p,
+
+        customer: {
+          name: "",
+          phone: "",
+          email: "",
+          address: "",
+          zip: "",
+          ...(p.customer || {}),
+        },
+      }))
+
+      setProjects(safe)
+    } catch (error) {
+      console.error("Failed loading projects", error)
+      setProjects([])
+    }
   }, [])
 
-  //  SAVE HELPER
+  // SAVE HELPER
   const persist = (next: Project[]) => {
     setProjects(next)
-    saveProjects(next)
+
+    try {
+      saveProjects(next)
+    } catch (error) {
+      console.error("Failed saving projects", error)
+    }
   }
 
-  //  CREATE PROJECT
+  // CREATE PROJECT
   const startProject = (_: string | null) => {
     const project = {
       id: crypto.randomUUID(),
       createdAt: Date.now(),
+
       type: null,
+
       customer: {
         name: "",
         phone: "",
@@ -80,7 +119,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         address: "",
         zip: "",
       },
+
+      notes: "",
+
+      images: [],
+
+      analysis: null,
+
       lineItems: [],
+
+      status: "draft",
+
       estimate: {
         laborRate: 60,
         wastePct: 10,
@@ -91,27 +140,60 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     const next = [project, ...projects]
+
     persist(next)
 
     setCurrent(project)
-    go("estimate")
+
+    go("capture")
   }
 
-  //  OPEN PROJECT
+  // OPEN PROJECT
   const openProject = (id: string) => {
-    const project = projects.find((p) => p.id === id)
+    const project = projects.find(
+      (p) => p.id === id
+    )
+
     if (!project) return
 
-    setCurrent(project)
+    const safeProject = {
+      notes: "",
+      images: [],
+      analysis: null,
+      lineItems: [],
+      status: "draft",
+
+      ...project,
+
+      customer: {
+        name: "",
+        phone: "",
+        email: "",
+        address: "",
+        zip: "",
+        ...(project.customer || {}),
+      },
+    }
+
+    setCurrent(safeProject)
+
     go("estimate")
   }
 
-  // ✏️ UPDATE CURRENT
+  // UPDATE CURRENT
   const updateCurrent = (patch: any) => {
     setCurrent((prev: any) => {
       if (!prev) return prev
 
-      const updated = { ...prev, ...patch }
+      const updated = {
+        ...prev,
+        ...patch,
+
+        customer: {
+          ...prev.customer,
+          ...(patch.customer || {}),
+        },
+      }
 
       const next = projects.map((p) =>
         p.id === updated.id ? updated : p
@@ -123,36 +205,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
   }
 
+  // SAVE CURRENT
   const saveCurrent = async () => {
-  if (!current) return
+    if (!current) return
 
-  try {
-    // keep local history working
-    const updatedProjects = projects.some((p) => p.id === current.id)
-      ? projects.map((p) => (p.id === current.id ? current : p))
-      : [current, ...projects]
+    try {
+      const updatedProjects = projects.some(
+        (p) => p.id === current.id
+      )
+        ? projects.map((p) =>
+            p.id === current.id ? current : p
+          )
+        : [current, ...projects]
 
-    setProjects(updatedProjects)
+      persist(updatedProjects)
 
-    localStorage.setItem(
-      "contractor-projects",
-      JSON.stringify(updatedProjects)
-    )
+      const email =
+        localStorage.getItem("pending_email") ||
+        current.customer?.email ||
+        "lead@unknown.com"
 
-    // save to Supabase
-    const email =
-      localStorage.getItem("pending_email") ||
-      current.customer?.email ||
-      "lead@unknown.com"
+      await saveProject(current, email)
 
-    await saveProject(current, email)
-
-    console.log("Project saved successfully")
-  } catch (error) {
-    console.error("Save failed:", error)
+      console.log("Project saved successfully")
+    } catch (error) {
+      console.error("Save failed:", error)
+    }
   }
-}
 
+  // TOTALS PLACEHOLDER
   const totals = {
     materials: 0,
     labor: 0,
@@ -162,18 +243,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     total: 0,
   }
 
+  // MONEY FORMATTER
   const money = (n: number) =>
-    new Intl.NumberFormat(lang === "es" ? "es-US" : "en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(n)
+    new Intl.NumberFormat(
+      lang === "es" ? "es-US" : "en-US",
+      {
+        style: "currency",
+        currency: "USD",
+      }
+    ).format(n)
 
   const value = useMemo(
     () => ({
       lang,
       setLang,
+
       screen,
       go,
+
       t,
 
       projects,
@@ -184,6 +271,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       current,
       setCurrent,
+
       updateCurrent,
       saveCurrent,
 
@@ -201,6 +289,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 export function useApp() {
   const ctx = useContext(AppContext)
-  if (!ctx) throw new Error("useApp must be used inside AppProvider")
+
+  if (!ctx) {
+    throw new Error(
+      "useApp must be used inside AppProvider"
+    )
+  }
+
   return ctx
 }
