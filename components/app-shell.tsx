@@ -64,21 +64,29 @@ export function AppShell() {
               {t("appName")}
             </span>
           </button>
+<div className="flex items-center gap-2">
+  {(["en", "es"] as const).map((l) => (
+    <button
+      key={l}
+      onClick={() => setLang(l)}
+      className={cn(
+        "px-2 py-1 text-xs uppercase rounded",
+        lang === l
+          ? "bg-primary text-white"
+          : "opacity-60"
+      )}
+    >
+      {l}
+    </button>
+  ))}
 
-          <div className="flex items-center gap-1">
-            {(["en", "es"] as const).map((l) => (
-              <button
-                key={l}
-                onClick={() => setLang(l)}
-                className={cn(
-                  "px-2 py-1 text-xs uppercase rounded",
-                  lang === l ? "bg-primary text-white" : "opacity-60"
-                )}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
+  <button
+    onClick={() => go("dashboard")}
+    className="rounded bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground hover:opacity-90"
+  >
+    Exit
+  </button>
+</div>
         </header>
 
         {/* Content */}
