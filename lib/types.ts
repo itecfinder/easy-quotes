@@ -1,6 +1,6 @@
 export type Lang = "en" | "es"
-
 export type ScreenKey =
+  | "access"
   | "dashboard"
   | "capture"
   | "scan"
@@ -9,6 +9,7 @@ export type ScreenKey =
   | "invoice"
   | "history"
   | "settings"
+
 
 export type ProjectTypeKey =
   | "kitchenBath"
