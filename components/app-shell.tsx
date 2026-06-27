@@ -81,7 +81,10 @@ export function AppShell() {
   ))}
 <button
   onClick={() => {
-    window.location.href = "https://www.itecfinder.com/login"
+    localStorage.clear()
+
+    window.location.href =
+      "https://www.itecfinder.com/login"
   }}
   className="rounded bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground hover:opacity-90"
 >
